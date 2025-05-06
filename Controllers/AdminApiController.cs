@@ -9,9 +9,8 @@ using API_ASP.Models;
 
 namespace ASPNETKEK.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Route("api/[controller]")]
     public class AdminApiController : ControllerBase
     {
         private readonly ASPBDContext _context;
@@ -264,7 +263,7 @@ namespace ASPNETKEK.Controllers
             return _context.Orders.Any(e => e.OrdersId == id);
         }
 
-        // Пользователи
+        // Users
         [HttpGet("users")]
         public async Task<ActionResult> GetUsers()
         {

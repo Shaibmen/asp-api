@@ -1,79 +1,67 @@
+using System.Text.Json.Serialization;
 using API_ASP.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ASPBDContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
+// Контроллеры и сериализация
 builder.Services.AddControllers()
     .AddJsonOptions(x =>
     {
-        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     });
 
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/home/login";
-        options.LogoutPath = "/home/logout";
-        options.Cookie.Name = ".AspNetCore.Cookies";
-    });
-
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        builder.AllowAnyOrigin()  
-               .AllowAnyMethod()  
-               .AllowAnyHeader(); 
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
-builder.Services.AddControllers();
-
-builder.Services.AddAuthorization();
-
+// Swagger (без авторизации)
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-if(app.Environment.IsDevelopment())
+// Middleware
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-
-app.UseCors("AllowAll");
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseCors("AllowAll");
+
+// Если есть [Authorize], обязательно вызывать UseAuthorization
 app.UseAuthorization();
 
-
+// Подключение контроллеров
 app.MapControllers();
 
+// Роутинг по умолчанию для MVC
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

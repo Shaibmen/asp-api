@@ -279,49 +279,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "AuthApiController",
-    "Method": "Login",
-    "RelativePath": "api/AuthApi/login",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "request",
-        "Type": "LoginRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "AuthApiController",
-    "Method": "Logout",
-    "RelativePath": "api/AuthApi/logout",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "AuthApiController",
-    "Method": "Register",
-    "RelativePath": "api/AuthApi/register",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "request",
-        "Type": "RegisterRequest",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "ASPNETKEK.Controllers.CustomerApiController",
+    "ContainingType": "API_ASP.Controllers.CustomerApiController",
     "Method": "AddReview",
     "RelativePath": "api/CustomerApi/add-review",
     "HttpMethod": "POST",
@@ -337,7 +295,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ASPNETKEK.Controllers.CustomerApiController",
+    "ContainingType": "API_ASP.Controllers.CustomerApiController",
     "Method": "AddToCart",
     "RelativePath": "api/CustomerApi/add-to-cart",
     "HttpMethod": "POST",
@@ -353,7 +311,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ASPNETKEK.Controllers.CustomerApiController",
+    "ContainingType": "API_ASP.Controllers.CustomerApiController",
     "Method": "GetCart",
     "RelativePath": "api/CustomerApi/cart",
     "HttpMethod": "GET",
@@ -363,7 +321,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ASPNETKEK.Controllers.CustomerApiController",
+    "ContainingType": "API_ASP.Controllers.CustomerApiController",
     "Method": "GetCatalog",
     "RelativePath": "api/CustomerApi/catalog",
     "HttpMethod": "GET",
@@ -389,7 +347,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ASPNETKEK.Controllers.CustomerApiController",
+    "ContainingType": "API_ASP.Controllers.CustomerApiController",
     "Method": "ProductDetails",
     "RelativePath": "api/CustomerApi/product-details/{id}",
     "HttpMethod": "GET",
@@ -405,7 +363,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "ASPNETKEK.Controllers.CustomerApiController",
+    "ContainingType": "API_ASP.Controllers.CustomerApiController",
     "Method": "UpdateCartItem",
     "RelativePath": "api/CustomerApi/update-cart",
     "HttpMethod": "POST",
@@ -415,6 +373,38 @@
       {
         "Name": "model",
         "Type": "ASPNETKEK.Models.Dto.CartUpdateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_ASP.Controllers.AuthApiController",
+    "Method": "Login",
+    "RelativePath": "AuthApi/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_ASP.Controllers.AuthApiController",
+    "Method": "Register",
+    "RelativePath": "AuthApi/register",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "RegisterRequest",
         "IsRequired": true
       }
     ],

@@ -1,81 +1,77 @@
-﻿using ASPNETKEK.Models;
+﻿using API_ASP.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using API_ASP.Models;
-using Microsoft.AspNetCore.Identity.Data;
 
-[ApiController]
-[Route("api/[controller]")]
-public class AuthApiController : ControllerBase
+namespace API_ASP.Controllers
 {
-    private readonly ASPBDContext _context;
-
-    public AuthApiController(ASPBDContext context)
+    [ApiController]
+    [Route("AuthApi")]
+    public class AuthApiController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly ASPBDContext _context;
+        private readonly IConfiguration _configuration;
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-    {
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-            return BadRequest("Пользователь уже существует");
-
-        var hashedPassword = HashPassword(request.Password);
-        var user = new User
+        public AuthApiController(ASPBDContext context, IConfiguration configuration)
         {
-            Login = request.Login,
-            Email = request.Email,
-            Password = hashedPassword,
-            RoleId = 1
-        };
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+            _context = context;
+            _configuration = configuration;
+        }
 
-        return Ok("Регистрация успешна");
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
-    {
-        var hashedPassword = HashPassword(request.Password);
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && u.Password == hashedPassword);
-
-        if (user == null)
-            return Unauthorized("Неверные учетные данные");
-
-        var claims = new List<Claim>
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginRequest request)
         {
-            new Claim(ClaimTypes.Name, user.Login),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.RoleId == 1 ? "Customer" : user.RoleId == 2 ? "Admin" : "OtherUsers")
-        };
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+                return BadRequest("Email and password are required");
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+            var hashedPassword = HashPassword(request.Password);
 
-        return Ok("Вход успешен");
-    }
+            var user = _context.Users.FirstOrDefault(u =>
+                u.Email == request.Email && u.Password == hashedPassword);
 
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Ok("Выход выполнен");
-    }
+            if (user == null)
+                return Unauthorized("Invalid credentials");
 
-    private string HashPassword(string password)
-    {
-        using (var sha256 = SHA256.Create())
+            return Ok(new
+            {
+                Message = "Login successful",
+                User = new
+                {
+                    user.UserId,
+                    user.Email,
+                    user.Login,
+                    user.RoleId
+                }
+            });
+        }
+
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterRequest request)
         {
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            if (_context.Users.Any(u => u.Email == request.Email))
+                return BadRequest("User already exists");
+
+            var user = new User
+            {
+                Email = request.Email,
+                Login = request.Login,
+                Password = HashPassword(request.Password),
+                RoleId = 2 // по умолчанию "User"
+            };
+
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            return Ok("User registered successfully");
+        }
+
+        private string HashPassword(string password)
+        {
+            using var sha256 = SHA256.Create();
+            var hashed = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return BitConverter.ToString(hashed).Replace("-", "").ToLower();
         }
     }
 }

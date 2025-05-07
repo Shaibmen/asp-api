@@ -173,3 +173,4 @@ C:\Users\User\source\repos\API_ASP\obj\Debug\net8.0\API_ASP.pdb
 C:\Users\User\source\repos\API_ASP\obj\Debug\net8.0\API_ASP.genruntimeconfig.cache
 C:\Users\User\source\repos\API_ASP\obj\Debug\net8.0\ref\API_ASP.dll
 C:\Users\User\source\repos\API_ASP\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\User\source\repos\API_ASP\bin\Debug\net8.0\Microsoft.Bcl.Memory.dll

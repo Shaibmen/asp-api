@@ -2,18 +2,37 @@ using System.Text.Json.Serialization;
 using API_ASP.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Добавляем контекст базы данных
 builder.Services.AddDbContext<ASPBDContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-// Контроллеры и сериализация
+// Настройка сериализации JSON
 builder.Services.AddControllers()
     .AddJsonOptions(x =>
     {
         x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    });
+
+// Добавляем JWT аутентификацию
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
     });
 
 // CORS
@@ -32,6 +51,28 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Scheme = "Bearer",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Description = "Enter your Bearer token"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
 });
 
 var app = builder.Build();
@@ -51,17 +92,17 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// Используем аутентификацию и авторизацию
 app.UseRouting();
-
 app.UseCors("AllowAll");
 
-// Если есть [Authorize], обязательно вызывать UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Подключение контроллеров
 app.MapControllers();
 
-// Роутинг по умолчанию для MVC
+// Роутинг по умолчанию для MVC (если нужно для Razor Views)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

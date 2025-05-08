@@ -23,7 +23,7 @@ public class AuthApiController : ControllerBase
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest loginRequest)
     {
-        var user = _context.Users.FirstOrDefault(u => u.Login == loginRequest.Email);
+        var user = _context.Users.FirstOrDefault(u => u.Login == loginRequest.Login); // Ищем по логину, а не по email
 
         if (user == null || !VerifyPassword(loginRequest.Password, user.Password))
             return Unauthorized("Invalid credentials.");
@@ -35,26 +35,26 @@ public class AuthApiController : ControllerBase
     [HttpPost("register")]
     public IActionResult Register([FromBody] RegisterRequest registerRequest)
     {
-        // Проверка на пустое значение
-        if (string.IsNullOrEmpty(registerRequest.Email) || string.IsNullOrEmpty(registerRequest.Password) || string.IsNullOrEmpty(registerRequest.Login))
-            return BadRequest("Email, Login and Password are required.");
+        // Проверка на обязательные поля
+        if (string.IsNullOrEmpty(registerRequest.Login))
+            return BadRequest("Login is required");
 
-        // Проверка, существует ли уже пользователь с таким email
-        var existingUser = _context.Users.FirstOrDefault(u => u.Login == registerRequest.Login || u.Email == registerRequest.Email);
-        if (existingUser != null)
-            return BadRequest("User already exists.");
+        if (string.IsNullOrEmpty(registerRequest.Password))
+            return BadRequest("Password is required");
+
+        // Проверка существующего пользователя только по логину
+        if (_context.Users.Any(u => u.Login == registerRequest.Login))
+            return BadRequest("User with this login already exists");
 
         // Хэширование пароля
-        using var sha256 = SHA256.Create();
-        var hashedPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes(registerRequest.Password));
-        var passwordHash = BitConverter.ToString(hashedPassword).Replace("-", "");
+        var passwordHash = HashPassword(registerRequest.Password);
 
-        // Создание нового пользователя
         var newUser = new User
         {
             Login = registerRequest.Login,
-            Email = registerRequest.Email,
-            Password = passwordHash
+            Email = registerRequest.Email, // может быть null
+            Password = passwordHash,
+            RoleId = 2 // Установите роль по умолчанию, если нужно
         };
 
         _context.Users.Add(newUser);
@@ -62,6 +62,13 @@ public class AuthApiController : ControllerBase
 
         var token = GenerateJwtToken(newUser.Login);
         return Ok(new { token });
+    }
+
+    private string HashPassword(string password)
+    {
+        using var sha256 = SHA256.Create();
+        var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+        return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
     }
 
 

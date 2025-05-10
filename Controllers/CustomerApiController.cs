@@ -2,11 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using API_ASP.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace API_ASP.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // Требуем авторизацию для всех методов
     public class CustomerController : ControllerBase
     {
         private readonly ASPBDContext _context;
@@ -18,6 +21,7 @@ namespace API_ASP.Controllers
 
         // GET: api/customer/catalog
         [HttpGet("catalog")]
+        [AllowAnonymous] // Разрешаем доступ без авторизации
         public async Task<ActionResult<IEnumerable<Catalog>>> GetCatalog(
             [FromQuery] string? category,
             [FromQuery] string? searchQuery,
@@ -55,11 +59,16 @@ namespace API_ASP.Controllers
         [HttpPost("update-cart")]
         public async Task<IActionResult> UpdateCartItem([FromBody] CartUpdateRequest request)
         {
-            var cartItem = await _context.PosOrders.FindAsync(request.PosOrderId);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(new { Message = "Пользователь не авторизован" });
+
+            var cartItem = await _context.PosOrders
+                .Include(p => p.Order)
+                .FirstOrDefaultAsync(p => p.PosOrderId == request.PosOrderId && p.Order.UsersId == userId);
+
             if (cartItem == null)
-            {
                 return NotFound(new { Message = "Элемент корзины не найден." });
-            }
 
             if (request.NewCount <= 0)
             {
@@ -71,8 +80,6 @@ namespace API_ASP.Controllers
             }
 
             await _context.SaveChangesAsync();
-
-            // Обновляем общую сумму заказа
             await UpdateOrderTotal((int)cartItem.OrderId);
 
             return Ok(new { Message = "Корзина успешно обновлена" });
@@ -82,48 +89,36 @@ namespace API_ASP.Controllers
         [HttpPost("add-to-cart")]
         public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = GetCurrentUserId();
             if (userId == null)
-            {
                 return Unauthorized(new { Message = "Пользователь не авторизован" });
-            }
-
-            if (!int.TryParse(userId, out var intUserId))
-            {
-                return BadRequest(new { Message = "Некорректный идентификатор пользователя" });
-            }
 
             var product = await _context.Catalogs.FindAsync(request.CatalogId);
             if (product == null)
-            {
-                return NotFound(new { Message = "Товар не найден." });
-            }
+                return NotFound(new { Message = "Товар не найден" });
 
-            // Ищем активный заказ пользователя (без проверки IsCompleted, так как его нет в модели)
             var order = await _context.Orders
                 .Include(o => o.PosOrders)
-                .FirstOrDefaultAsync(o => o.UsersId == intUserId && o.PosOrders.Any());
-
-            if (order == null)
-            {
-                order = new Order
+                .FirstOrDefaultAsync(o => o.UsersId == userId) ?? new Order
                 {
-                    UsersId = intUserId,
+                    UsersId = userId.Value,
                     TotalSum = 0
                 };
+
+            if (order.OrdersId == 0)
+            {
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
             }
 
-            var cartItem = await _context.PosOrders
-                .FirstOrDefaultAsync(c => c.ProductId == request.CatalogId && c.OrderId == order.OrdersId);
+            var cartItem = order.PosOrders.FirstOrDefault(p => p.ProductId == request.CatalogId);
 
             if (cartItem == null)
             {
                 cartItem = new PosOrder
                 {
-                    ProductId = request.CatalogId,
                     OrderId = order.OrdersId,
+                    ProductId = request.CatalogId,
                     Count = 1
                 };
                 _context.PosOrders.Add(cartItem);
@@ -136,44 +131,39 @@ namespace API_ASP.Controllers
             await _context.SaveChangesAsync();
             await UpdateOrderTotal(order.OrdersId);
 
-            return Ok(new { Message = "Товар успешно добавлен в корзину" });
+            return Ok(new
+            {
+                Message = "Товар добавлен в корзину",
+                CartItemId = cartItem.PosOrderId
+            });
         }
 
         // GET: api/customer/cart
         [HttpGet("cart")]
         public async Task<ActionResult<CartResponse>> GetCart()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = GetCurrentUserId();
             if (userId == null)
-            {
                 return Unauthorized(new { Message = "Пользователь не авторизован" });
-            }
 
-            if (!int.TryParse(userId, out var intUserId))
-            {
-                return BadRequest(new { Message = "Некорректный идентификатор пользователя" });
-            }
-
-            // Находим заказ пользователя с позициями
             var order = await _context.Orders
                 .Include(o => o.PosOrders)
                 .ThenInclude(po => po.Product)
-                .FirstOrDefaultAsync(o => o.UsersId == intUserId && o.PosOrders.Any());
+                .FirstOrDefaultAsync(o => o.UsersId == userId && o.PosOrders.Any());
 
             if (order == null)
-            {
                 return Ok(new CartResponse { Items = new List<PosOrder>(), TotalSum = 0 });
-            }
 
-            return new CartResponse
+            return Ok(new CartResponse
             {
                 Items = order.PosOrders.ToList(),
                 TotalSum = order.TotalSum
-            };
+            });
         }
 
         // GET: api/customer/product-details/{id}
         [HttpGet("product-details/{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ProductDetailsResponse>> GetProductDetails(int id)
         {
             var product = await _context.Catalogs
@@ -182,15 +172,13 @@ namespace API_ASP.Controllers
                 .FirstOrDefaultAsync(p => p.CatalogsId == id);
 
             if (product == null)
-            {
                 return NotFound();
-            }
 
-            return new ProductDetailsResponse
+            return Ok(new ProductDetailsResponse
             {
                 Product = product,
                 Reviews = product.Reviews.ToList()
-            };
+            });
         }
 
         // POST: api/customer/add-review
@@ -198,26 +186,20 @@ namespace API_ASP.Controllers
         public async Task<IActionResult> AddReview([FromBody] ReviewRequest request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(new { Message = "Некорректные данные." });
-            }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null || !int.TryParse(userId, out var intUserId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == null)
                 return Unauthorized(new { Message = "Пользователь не авторизован" });
-            }
 
             var product = await _context.Catalogs.FindAsync(request.ProductId);
             if (product == null)
-            {
                 return NotFound(new { Message = "Товар не найден." });
-            }
 
             var review = new Review
             {
                 ProductId = request.ProductId,
-                UserId = intUserId,
+                UserId = userId.Value,
                 ReviewText = request.Text,
                 Rating = request.Rating,
                 CreatedAt = DateTime.Now
@@ -231,6 +213,7 @@ namespace API_ASP.Controllers
 
         // GET: api/customer/average-rating/{productId}
         [HttpGet("average-rating/{productId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<AverageRatingResponse>> GetAverageRating(int productId)
         {
             var reviews = await _context.Reviews
@@ -239,7 +222,7 @@ namespace API_ASP.Controllers
 
             var averageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
 
-            return new AverageRatingResponse { AverageRating = averageRating };
+            return Ok(new AverageRatingResponse { AverageRating = averageRating });
         }
 
         private async Task UpdateOrderTotal(int orderId)
@@ -252,9 +235,23 @@ namespace API_ASP.Controllers
             if (order != null)
             {
                 order.TotalSum = order.PosOrders.Sum(po =>
-                    po.Count * decimal.Parse(po.Product.Price));
+                    po.Count * decimal.Parse(po.Product?.Price ?? "0"));
                 await _context.SaveChangesAsync();
             }
+        }
+
+        private int? GetCurrentUserId()
+        {
+            // Пробуем разные варианты получения ID пользователя
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                            User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return null;
+            }
+
+            return userId;
         }
     }
 
@@ -272,14 +269,14 @@ namespace API_ASP.Controllers
 
     public class CartResponse
     {
-        public IEnumerable<PosOrder> Items { get; set; }
+        public IEnumerable<PosOrder> Items { get; set; } = new List<PosOrder>();
         public decimal TotalSum { get; set; }
     }
 
     public class ProductDetailsResponse
     {
         public Catalog Product { get; set; }
-        public IEnumerable<Review> Reviews { get; set; }
+        public IEnumerable<Review> Reviews { get; set; } = new List<Review>();
     }
 
     public class ReviewRequest

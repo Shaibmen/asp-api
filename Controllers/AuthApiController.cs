@@ -20,48 +20,49 @@ public class AuthApiController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest loginRequest)
-    {
-        var user = _context.Users.FirstOrDefault(u => u.Login == loginRequest.Login); // Ищем по логину, а не по email
-
-        if (user == null || !VerifyPassword(loginRequest.Password, user.Password))
-            return Unauthorized("Invalid credentials.");
-
-        var token = GenerateJwtToken(user.Login);
-        return Ok(new { token });
-    }
-
+   
     [HttpPost("register")]
     public IActionResult Register([FromBody] RegisterRequest registerRequest)
     {
-        // Проверка на обязательные поля
         if (string.IsNullOrEmpty(registerRequest.Login))
-            return BadRequest("Login is required");
+            return BadRequest(new { Message = "Login is required" });
 
         if (string.IsNullOrEmpty(registerRequest.Password))
-            return BadRequest("Password is required");
+            return BadRequest(new { Message = "Password is required" });
 
-        // Проверка существующего пользователя только по логину
         if (_context.Users.Any(u => u.Login == registerRequest.Login))
-            return BadRequest("User with this login already exists");
+            return BadRequest(new { Message = "User with this login already exists" });
 
-        // Хэширование пароля
         var passwordHash = HashPassword(registerRequest.Password);
 
         var newUser = new User
         {
             Login = registerRequest.Login,
-            Email = registerRequest.Email, // может быть null
+            Email = registerRequest.Email,
             Password = passwordHash,
-            RoleId = 2 // Установите роль по умолчанию, если нужно
+            RoleId = 2
         };
 
         _context.Users.Add(newUser);
         _context.SaveChanges();
 
-        var token = GenerateJwtToken(newUser.Login);
-        return Ok(new { token });
+        var token = GenerateJwtToken(newUser,"1");
+        return Ok(new { Token = token });
+    }
+
+    [HttpGet("profile")]
+    [Authorize]
+    public IActionResult GetProfile()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userId, out var intUserId))
+            return Unauthorized(new { Message = "Invalid user ID" });
+
+        var user = _context.Users.FirstOrDefault(u => u.UserId == intUserId);
+        if (user == null)
+            return NotFound(new { Message = "User not found." });
+
+        return Ok(user);
     }
 
     private string HashPassword(string password)
@@ -71,53 +72,107 @@ public class AuthApiController : ControllerBase
         return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
     }
 
-
-    [HttpGet("profile")]
-    [Authorize]
-    public IActionResult GetProfile()
-    {
-        var userLogin = User.Identity.Name;
-        var user = _context.Users.FirstOrDefault(u => u.Login == userLogin);
-
-        if (user == null)
-            return NotFound("User not found.");
-
-        return Ok(user);
-    }
-
     private bool VerifyPassword(string inputPassword, string storedHash)
     {
-        using var sha256 = SHA256.Create();
-        var hashedInput = sha256.ComputeHash(Encoding.UTF8.GetBytes(inputPassword));
-        var inputHash = BitConverter.ToString(hashedInput).Replace("-", "");
+        var inputHash = HashPassword(inputPassword);
         return inputHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase);
     }
 
-    private string GenerateJwtToken(string email)
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginRequest loginRequest)
+    {
+        // Регистронезависимый поиск пользователя
+        var user = _context.Users
+            .FirstOrDefault(u => u.Login.ToLower() == loginRequest.Login.ToLower());
+
+        if (user == null || !VerifyPassword(loginRequest.Password, user.Password))
+        {
+            return Unauthorized(new { Message = "Неверные учетные данные." });
+        }
+
+        // Определение роли
+        string userRole = user.RoleId switch
+        {
+            2 => "admin",  // Администратор
+            1 => "user",   // Обычный пользователь
+            _ => "user"   // По умолчанию
+        };
+
+        // Генерация токена
+        var token = GenerateJwtToken(user, userRole);
+
+        return Ok(new
+        {
+            Token = token,
+            User = new
+            {
+                user.UserId,
+                user.Login,
+                user.Email,
+                Role = userRole  // Явно передаем роль в ответе
+            }
+        });
+    }
+
+    private string GenerateJwtToken(User user, string userRole)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        // Получаем пользователя из БД по email/login
-        var user = _context.Users.FirstOrDefault(u => u.Login == email); // или по Email, в зависимости от использования
-        if (user == null)
-            throw new Exception("User not found");
+        var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
         var claims = new[]
         {
+        new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-        new Claim(ClaimTypes.Name, user.Login)
+        new Claim(ClaimTypes.Name, user.Login),
+        new Claim(ClaimTypes.Role, userRole)  // Используем переданную роль
     };
 
-        var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiresInMinutes"])),
-            signingCredentials: creds);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(1),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature),
+            Issuer = jwtSettings["Issuer"],
+            Audience = jwtSettings["Audience"]
+        };
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
 
+    [HttpGet("user-by-login/{login}")]
+    [Authorize]
+    public IActionResult GetUserByLogin(string login)
+    {
+        var user = _context.Users
+            .FirstOrDefault(u => u.Login.ToLower() == login.ToLower());
+
+        if (user == null)
+            return NotFound(new { Message = "Пользователь не найден" });
+
+        return Ok(new
+        {
+            user.UserId,
+            user.Login,
+            user.Email,
+            user.RoleId
+        });
+    }
+}
+
+public class LoginRequest
+{
+    public string Login { get; set; }
+    public string Password { get; set; }
+}
+
+public class RegisterRequest
+{
+    public string Login { get; set; }
+    public string Email { get; set; }
+    public string Password { get; set; }
 }

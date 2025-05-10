@@ -587,6 +587,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "AuthApiController",
+    "Method": "GetUserByLogin",
+    "RelativePath": "api/AuthApi/user-by-login/{login}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "login",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API_ASP.Controllers.CustomerController",
     "Method": "AddReview",
     "RelativePath": "api/Customer/add-review",

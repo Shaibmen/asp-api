@@ -10,7 +10,6 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавляем контекст базы данных
 builder.Services.AddDbContext<ASPBDContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -18,10 +17,9 @@ builder.Services.AddDbContext<ASPBDContext>(options =>
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.MinimumSameSitePolicy = SameSiteMode.None;
-    options.Secure = CookieSecurePolicy.None; // Для разработки
+    options.Secure = CookieSecurePolicy.None;
     options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
 });
-// Настройка сериализации JSON
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -29,7 +27,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
-// Добавляем JWT аутентификацию
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
@@ -50,14 +47,12 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
-        // Важные настройки для правильного маппинга claims
-        NameClaimType = ClaimTypes.NameIdentifier, // Указываем, что NameIdentifier будет основным claim для имени
+        NameClaimType = ClaimTypes.NameIdentifier, 
         RoleClaimType = ClaimTypes.Role
     };
 });
 
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
@@ -70,7 +65,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -102,7 +96,6 @@ var app = builder.Build();
 
 app.UseRouting();
 
-// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -115,8 +108,6 @@ if (app.Environment.IsDevelopment())
 }
 
 
-
-// Важно: CORS должен идти после UseRouting и перед UseAuthentication
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

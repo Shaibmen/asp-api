@@ -9,7 +9,7 @@ namespace API_ASP.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Требуем авторизацию для всех методов
+    [Authorize] 
     public class CustomerController : ControllerBase
     {
         private readonly ASPBDContext _context;
@@ -19,9 +19,8 @@ namespace API_ASP.Controllers
             _context = context;
         }
 
-        // GET: api/customer/catalog
         [HttpGet("catalog")]
-        [AllowAnonymous] // Разрешаем доступ без авторизации
+        [AllowAnonymous] 
         public async Task<ActionResult<IEnumerable<Catalog>>> GetCatalog(
             [FromQuery] string? category,
             [FromQuery] string? searchQuery,
@@ -55,7 +54,6 @@ namespace API_ASP.Controllers
             return await products.ToListAsync();
         }
 
-        // POST: api/customer/update-cart
         [HttpPost("update-cart")]
         public async Task<IActionResult> UpdateCartItem([FromBody] CartUpdateRequest request)
         {
@@ -85,7 +83,6 @@ namespace API_ASP.Controllers
             return Ok(new { Message = "Корзина успешно обновлена" });
         }
 
-        // POST: api/customer/add-to-cart
         [HttpPost("add-to-cart")]
         public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
         {
@@ -138,7 +135,6 @@ namespace API_ASP.Controllers
             });
         }
 
-        // GET: api/customer/cart
         [HttpGet("cart")]
         public async Task<ActionResult<CartResponse>> GetCart()
         {
@@ -161,7 +157,6 @@ namespace API_ASP.Controllers
             });
         }
 
-        // GET: api/customer/product-details/{id}
         [HttpGet("product-details/{id}")]
         [AllowAnonymous]
         public async Task<ActionResult<ProductDetailsResponse>> GetProductDetails(int id)
@@ -181,7 +176,6 @@ namespace API_ASP.Controllers
             });
         }
 
-        // POST: api/customer/add-review
         [HttpPost("add-review")]
         public async Task<IActionResult> AddReview([FromBody] ReviewRequest request)
         {
@@ -211,7 +205,6 @@ namespace API_ASP.Controllers
             return Ok(new { Message = "Отзыв успешно добавлен" });
         }
 
-        // GET: api/customer/average-rating/{productId}
         [HttpGet("average-rating/{productId}")]
         [AllowAnonymous]
         public async Task<ActionResult<AverageRatingResponse>> GetAverageRating(int productId)
@@ -242,7 +235,6 @@ namespace API_ASP.Controllers
 
         private int? GetCurrentUserId()
         {
-            // Пробуем разные варианты получения ID пользователя
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ??
                             User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
@@ -255,7 +247,6 @@ namespace API_ASP.Controllers
         }
     }
 
-    // DTO классы
     public class CartUpdateRequest
     {
         public int PosOrderId { get; set; }

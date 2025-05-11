@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\User\\source\\repos\\API_ASP\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\controllers\\adminapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|solutionrelative:controllers\\adminapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\controllers\\customerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|solutionrelative:controllers\\customerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\models\\order.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|solutionrelative:models\\order.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\models\\catalog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|solutionrelative:models\\catalog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\controllers\\customerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|solutionrelative:controllers\\customerapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{3915D3B1-0967-4CC3-8F9A-28996D8FA717}|API_ASP.csproj|c:\\users\\user\\source\\repos\\api_asp\\controllers\\authapicontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -34,24 +38,36 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Catalog.cs",
-              "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Models\\Catalog.cs",
-              "RelativeDocumentMoniker": "Models\\Catalog.cs",
-              "ToolTip": "C:\\Users\\User\\source\\repos\\API_ASP\\Models\\Catalog.cs",
-              "RelativeToolTip": "Models\\Catalog.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAAA9wBkAAAApAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-11T03:04:59.84Z",
+              "DocumentIndex": 0,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\User\\source\\repos\\API_ASP\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-11T03:36:47.758Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
+              "Title": "Order.cs",
+              "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Models\\Order.cs",
+              "RelativeDocumentMoniker": "Models\\Order.cs",
+              "ToolTip": "C:\\Users\\User\\source\\repos\\API_ASP\\Models\\Order.cs",
+              "RelativeToolTip": "Models\\Order.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-11T03:12:19.399Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -63,7 +79,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "ASPBDContext.cs",
               "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Models\\ASPBDContext.cs",
               "RelativeDocumentMoniker": "Models\\ASPBDContext.cs",
@@ -75,20 +91,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "AdminApiController.cs",
               "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Controllers\\AdminApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\AdminApiController.cs",
               "ToolTip": "C:\\Users\\User\\source\\repos\\API_ASP\\Controllers\\AdminApiController.cs",
               "RelativeToolTip": "Controllers\\AdminApiController.cs",
-              "ViewState": "AgIAABgAAAAAAAAAAAAkwC4AAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAABgAAAAAAAAAAAA3wCYAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-06T14:24:25.107Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "CustomerApiController.cs",
               "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Controllers\\CustomerApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\CustomerApiController.cs",
@@ -96,12 +112,11 @@
               "RelativeToolTip": "Controllers\\CustomerApiController.cs",
               "ViewState": "AgIAAA4BAAAAAAAAAAAiwBkBAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-06T07:37:44.654Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-06T07:37:44.654Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "AuthApiController.cs",
               "DocumentMoniker": "C:\\Users\\User\\source\\repos\\API_ASP\\Controllers\\AuthApiController.cs",
               "RelativeDocumentMoniker": "Controllers\\AuthApiController.cs",

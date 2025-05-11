@@ -81,7 +81,6 @@ public class AuthApiController : ControllerBase
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest loginRequest)
     {
-        // Регистронезависимый поиск пользователя
         var user = _context.Users
             .FirstOrDefault(u => u.Login.ToLower() == loginRequest.Login.ToLower());
 
@@ -90,15 +89,13 @@ public class AuthApiController : ControllerBase
             return Unauthorized(new { Message = "Неверные учетные данные." });
         }
 
-        // Определение роли
         string userRole = user.RoleId switch
         {
-            2 => "admin",  // Администратор
-            1 => "user",   // Обычный пользователь
-            _ => "user"   // По умолчанию
+            2 => "admin", 
+            1 => "user",  
+            _ => "user"   
         };
 
-        // Генерация токена
         var token = GenerateJwtToken(user, userRole);
 
         return Ok(new
@@ -109,7 +106,7 @@ public class AuthApiController : ControllerBase
                 user.UserId,
                 user.Login,
                 user.Email,
-                Role = userRole  // Явно передаем роль в ответе
+                Role = userRole  
             }
         });
     }
@@ -125,7 +122,7 @@ public class AuthApiController : ControllerBase
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
         new Claim(ClaimTypes.Name, user.Login),
-        new Claim(ClaimTypes.Role, userRole)  // Используем переданную роль
+        new Claim(ClaimTypes.Role, userRole) 
     };
 
         var tokenDescriptor = new SecurityTokenDescriptor

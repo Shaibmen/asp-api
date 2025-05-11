@@ -7,11 +7,10 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace API_ASP.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     [ApiController]
     [Route("api/admin")]
     public class AdminApiController : ControllerBase
-
     {
         private readonly ASPBDContext _context;
 
@@ -287,6 +286,70 @@ namespace API_ASP.Controllers
         }
 
         private bool PosOrderExists(int id) => _context.PosOrders.Any(e => e.PosOrderId == id);
+
+        #endregion
+
+        #region Roles CRUD
+
+        [HttpGet("roles")]
+        public async Task<ActionResult<IEnumerable<Role>>> GetRoles()
+        {
+            return await _context.Roles.ToListAsync();
+        }
+
+        [HttpGet("roles/{id}")]
+        public async Task<ActionResult<Role>> GetRole(int id)
+        {
+            var role = await _context.Roles.FindAsync(id);
+            if (role == null) return NotFound();
+            return role;
+        }
+
+        [HttpPost("roles")]
+        public async Task<ActionResult<Role>> CreateRole([FromBody] Role role)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            _context.Roles.Add(role);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetRole), new { id = role.RoleId }, role);
+        }
+
+        [HttpPut("roles/{id}")]
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] Role role)
+        {
+            if (id != role.RoleId) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            _context.Entry(role).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!RoleExists(id)) return NotFound();
+                throw;
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("roles/{id}")]
+        public async Task<IActionResult> DeleteRole(int id)
+        {
+            var role = await _context.Roles.FindAsync(id);
+            if (role == null) return NotFound();
+
+            _context.Roles.Remove(role);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool RoleExists(int id) => _context.Roles.Any(e => e.RoleId == id);
 
         #endregion
 

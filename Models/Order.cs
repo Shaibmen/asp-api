@@ -15,7 +15,7 @@ public partial class Order
 
     public virtual Catalog? Catalogs { get; set; }
 
-    public virtual ICollection<PosOrder> PosOrders { get; set; } = new List<PosOrder>();
+    public virtual ICollection<PosOrder>? PosOrders { get; set; } = new List<PosOrder>();
 
     public virtual User? Users { get; set; }
 }

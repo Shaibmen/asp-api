@@ -356,11 +356,28 @@ namespace API_ASP.Controllers
         #region Users CRUD
 
         [HttpGet("users")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Select(u => new UserDto
+                {
+                    UserId = u.UserId,
+                    Login = u.Login,
+                    Email = u.Email,
+                    RoleId = u.RoleId,
+                    RoleName = u.Role != null ? u.Role.RoleName : null
+                })
                 .ToListAsync();
+        }
+
+        public class UserDto
+        {
+            public int UserId { get; set; }
+            public string Login { get; set; }
+            public string Email { get; set; }
+            public int? RoleId { get; set; }
+            public string RoleName { get; set; }
         }
 
         [HttpGet("users/{id}")]
